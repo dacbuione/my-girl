@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native"
 import { Canvas, useFrame } from "@react-three/fiber/native"
-import { PerspectiveCamera, Environment, useCursor } from "@react-three/drei/native"
+import { PerspectiveCamera, Environment } from "@react-three/drei/native"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
 import * as THREE from "three"
 import { Audio } from "expo-av"
@@ -56,17 +56,17 @@ export default function SanctuaryScreen() {
           )}
 
           <View style={styles.bottomBar}>
-            <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("Feed")}>
+            <TouchableOpacity style={styles.actionButton}>
               <Ionicons name="nutrition-outline" size={24} color="#fff" />
               <Text style={styles.buttonText}>Feed</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("Play")}>
+            <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("MiniGame")}>
               <Ionicons name="game-controller-outline" size={24} color="#fff" />
               <Text style={styles.buttonText}>Play</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("Speak")}>
+            <TouchableOpacity style={styles.actionButton}>
               <Ionicons name="mic-outline" size={24} color="#fff" />
               <Text style={styles.buttonText}>Speak</Text>
             </TouchableOpacity>
@@ -104,12 +104,6 @@ function SpiritGuide({ setShowMoodIndicator, setSpiritMood }) {
   const [position] = useState(new THREE.Vector3(0, 0, 0))
   const [soundEffect, setSoundEffect] = useState(null)
 
-  // Simulating loading a 3D model
-  // In a real app, you would use useGLTF to load your spirit guide model
-
-  useCursor(hovered)
-
-  // Animation loop
   useFrame((state, delta) => {
     if (!group.current) return
 
@@ -136,8 +130,10 @@ function SpiritGuide({ setShowMoodIndicator, setSpiritMood }) {
     setShowMoodIndicator(true)
     setTimeout(() => setShowMoodIndicator(false), 3000)
 
-    // Play sound effect
     try {
+      if (soundEffect) {
+        await soundEffect.unloadAsync()
+      }
       const { sound } = await Audio.Sound.createAsync(require("../../assets/sounds/purr.mp3"))
       setSoundEffect(sound)
       await sound.playAsync()
@@ -161,23 +157,20 @@ function SpiritGuide({ setShowMoodIndicator, setSpiritMood }) {
       : undefined
   }, [soundEffect])
 
-  // Placeholder for the 3D model
   return (
     <group ref={group} position={[0, 0, 0]}>
       <mesh
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
         onClick={(e) => {
-          // Different reactions based on where the spirit is touched
           if (e.point.y > 0.5) {
-            handlePet() // Pet head
+            handlePet()
           } else {
-            handleTickle() // Tickle body
+            handleTickle()
           }
           e.stopPropagation()
         }}
       >
-        {/* Placeholder geometry - would be replaced with actual model */}
         <sphereGeometry args={[0.7, 32, 32]} />
         <meshStandardMaterial
           color={hovered ? "#9c88ff" : "#8c7ae6"}
@@ -207,7 +200,7 @@ function SpiritGuide({ setShowMoodIndicator, setSpiritMood }) {
         <meshStandardMaterial color="#000000" />
       </mesh>
 
-      {/* Spirit's ethereal aura/wings */}
+      {/* Spirit's ethereal aura */}
       <mesh position={[0, 0, -0.3]} rotation={[0, 0, 0]}>
         <torusGeometry args={[1, 0.2, 16, 100, Math.PI * 2]} />
         <meshStandardMaterial
@@ -224,7 +217,6 @@ function SpiritGuide({ setShowMoodIndicator, setSpiritMood }) {
 
 // Sanctuary Environment Component
 function Sanctuary() {
-  // This would be customizable by the user
   return (
     <group>
       {/* Ground plane */}
